@@ -95,7 +95,6 @@ lens.prototype.del = function(lensArr) {
 
 lens.prototype.set = function(lensArr, set) {
     return this.mod(lensArr, function() { return set; });
-    // return modifier(this._wrapped, lens, function() { return set; });
 };
 
 // Lens must point to a member of an array. We'll insert into that array.
@@ -103,7 +102,7 @@ lens.prototype.insertAt = function(lensArr, toInsert) {
     var obj = this._wrapped;
 
     var arrLens = lensArr.slice(0, -1);
-    var arr = getter(obj, arrLens).slice(); // slice to copy
+    var arr = lens(obj).get(arrLens).slice(); // slice to copy
 
     var arrIdx = lensArr[lensArr.length-1];
     arr.splice(arrIdx, 0, toInsert);
