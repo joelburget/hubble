@@ -48,7 +48,7 @@ describe("get", function() {
 describe("set", function() {
     it("should set the specified focus", function() {
         var result = lens(recipe)
-            .setC(["ingredients"], "none!")
+            .set(["ingredients"], "none!")
             .get(["ingredients"]);
         // var result1 = lens(recipe).set(["ingredients"], "none!");
         // var result = lens(result1).get(["ingredients"]);
@@ -56,7 +56,7 @@ describe("set", function() {
     });
 
     it("should not modify the original object", function() {
-        lens(recipe).set(["ingredients"], null);
+        lens(recipe).set(["ingredients"], null).freeze();
         assert.deepEqual(
             recipe.ingredients,
             [
@@ -71,7 +71,7 @@ describe("set", function() {
 
 describe("del", function() {
     it("should remove the specified focus", function() {
-        var result = lens(recipe).del(["ingredients"]);
+        var result = lens(recipe).del(["ingredients"]).freeze();
         var expected = {
             steps: [
                 "unwrap chocolate",
@@ -81,7 +81,7 @@ describe("del", function() {
         assert.deepEqual(result, expected);
 
         result = lens(recipe)
-            .delC(["steps", 0])
+            .del(["steps", 0])
             .get(["steps"]);
 
         expected = ["unwrap chocolate", "eat chocolate"];
@@ -93,7 +93,7 @@ describe("del", function() {
 
 describe("merge", function() {
     it("should merge in new properties", function() {
-        var result = lens(recipe).mergeC(["ingredients", 0], {
+        var result = lens(recipe).merge(["ingredients", 0], {
             details: "dark, close to 72% cacao"
         }).get(["ingredients", 0]);
 
@@ -107,7 +107,7 @@ describe("merge", function() {
     });
 
     it("should overwrite properties", function() {
-        var result = lens(recipe).mergeC(["ingredients", 0], {
+        var result = lens(recipe).merge(["ingredients", 0], {
             name: "dark chocolate"
         }).get(["ingredients", 0]);
 
@@ -124,9 +124,9 @@ describe("zoom", function() {
     it("should focus on part of the structure", function() {
         var result = lens(recipe)
             .zoom(["ingredients", 0])
-                .setC(["name"], "chocolate chips")
-                .setC(["quantity"], "1 1/2 cups")
-            .deZoomC()
+                .set(["name"], "chocolate chips")
+                .set(["quantity"], "1 1/2 cups")
+            .deZoom()
             .get(["ingredients", 0]);
 
         assert.deepEqual(result, {
@@ -139,10 +139,10 @@ describe("zoom", function() {
         var result = lens(recipe)
             .zoom(["ingredients"])
                 .zoom([0])
-                    .setC(["name"], "chocolate chips")
-                    .setC(["quantity"], "1 1/2 cups")
-                .deZoomC()
-            .deZoomC()
+                    .set(["name"], "chocolate chips")
+                    .set(["quantity"], "1 1/2 cups")
+                .deZoom()
+            .deZoom()
             .get(["ingredients", 0]);
 
         assert.deepEqual(result, {

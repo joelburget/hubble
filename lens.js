@@ -49,11 +49,11 @@ var lens = function(obj) {
 };
 
 lens.prototype.zoom = function(lensArr) {
-    if (this._zoomLevels === undefined) {
-        this._zoomLevels = [];
+    if (this._zoomStack === undefined) {
+        this._zoomStack = [];
     }
 
-    this._zoomLevels.push({
+    this._zoomStack.push({
         zoom: lensArr,
         wrapped: this._wrapped
     });
@@ -62,28 +62,25 @@ lens.prototype.zoom = function(lensArr) {
     return this;
 };
 
-// TODO?
-lens.prototype.zoomC = lens.prototype.zoom;
-
 lens.prototype.deZoom = function() {
-    var level = this._zoomLevels.pop();
-    this._wrapped = lens(level.wrapped).set(level.zoom, this._wrapped);
+    var frame = this._zoomStack.pop();
+    this._wrapped = lens(frame.wrapped)
+        .set(frame.zoom, this._wrapped)
+        .freeze();
 
     return this;
 };
 
-// TODO?
-lens.prototype.deZoomC = lens.prototype.deZoom;
-
-lens.prototype.getC = function(lensArr) {
+lens.prototype.get = function(lensArr) {
+    var obj = this._wrapped;
     for (var i = 0; i < lensArr.length; i++) {
-        this._wrapped = this._wrapped[lensArr[i]];
+        obj = obj[lensArr[i]];
     }
 
-    return this;
+    return obj;
 };
 
-lens.prototype.modC = function(lensArr, mod) {
+lens.prototype.mod = function(lensArr, mod) {
     var obj = this._wrapped;
 
     if (lensArr.length === 0) {
@@ -91,28 +88,32 @@ lens.prototype.modC = function(lensArr, mod) {
     } else {
         var monocle = lensArr[0];
         var newObj = clone(obj);
-        newObj[monocle] = lens(obj[monocle]).mod(lensArr.slice(1), mod);
+        newObj[monocle] = lens(obj[monocle])
+            .mod(lensArr.slice(1), mod)
+            .freeze();
         this._wrapped = newObj;
     }
 
     return this;
 };
 
-lens.prototype.mergeC = function(lensArr, props) {
+lens.prototype.merge = function(lensArr, props) {
     this._wrapped = lens(this._wrapped).mod(lensArr, function(oldProps) {
         return merge(oldProps, props);
-    });
+    }).freeze();
 
     return this;
 };
 
 // Lens must have length >= 1 or there would be nothing to return
-lens.prototype.delC = function(lensArr) {
+lens.prototype.del = function(lensArr) {
     var newObj = clone(this._wrapped);
     if (lensArr.length === 1) {
         delete newObj[lensArr[0]];
     } else {
-        var newSubObj = lens(newObj[lensArr[0]]).del(lensArr.slice(1));
+        var newSubObj = lens(newObj[lensArr[0]])
+            .del(lensArr.slice(1))
+            .freeze();
         newObj[lensArr[0]] = newSubObj;
     }
 
@@ -120,8 +121,8 @@ lens.prototype.delC = function(lensArr) {
     return this;
 };
 
-lens.prototype.setC = function(lensArr, set) {
-    return this.modC(lensArr, function() { return set; });
+lens.prototype.set = function(lensArr, set) {
+    return this.mod(lensArr, function() { return set; });
 };
 
 /*
@@ -145,24 +146,9 @@ lens.prototype.insertAfter = function(lensArr, toInsert) {
 };
 */
 
-// Creates a chainable version of the method named by accessor. Basically,
-// modifies it so that it returns a new instance of lens rather than a bare
-// object.
-var unChain = function(accessor) {
-    // lens functions take up to two arguments - pass them through
-    return function(b, c) {
-        return this[accessor].call(this, b, c)._wrapped;
-    };
+lens.prototype.freeze = function() {
+    return this._wrapped;
 };
-
-lens.prototype.get          = unChain("getC");
-lens.prototype.mod          = unChain("modC");
-lens.prototype.set          = unChain("setC");
-lens.prototype.del          = unChain("delC");
-lens.prototype.merge        = unChain("mergeC");
-lens.prototype.insertAt     = unChain("insertAtC");
-lens.prototype.insertBefore = unChain("insertBeforeC");
-lens.prototype.insertAfter  = unChain("insertAfterC");
 
 module.exports = lens;
 
