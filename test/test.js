@@ -119,3 +119,35 @@ describe("merge", function() {
         assert.deepEqual(result, expected);
     });
 });
+
+describe("zoom", function() {
+    it("should focus on part of the structure", function() {
+        var result = lens(recipe)
+            .zoom(["ingredients", 0])
+                .setC(["name"], "chocolate chips")
+                .setC(["quantity"], "1 1/2 cups")
+            .deZoomC()
+            .get(["ingredients", 0]);
+
+        assert.deepEqual(result, {
+            name: "chocolate chips",
+            quantity: "1 1/2 cups"
+        });
+    });
+
+    it("should allow nested zooms", function() {
+        var result = lens(recipe)
+            .zoom(["ingredients"])
+                .zoom([0])
+                    .setC(["name"], "chocolate chips")
+                    .setC(["quantity"], "1 1/2 cups")
+                .deZoomC()
+            .deZoomC()
+            .get(["ingredients", 0]);
+
+        assert.deepEqual(result, {
+            name: "chocolate chips",
+            quantity: "1 1/2 cups"
+        });
+    });
+});
