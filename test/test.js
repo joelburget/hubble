@@ -1,5 +1,6 @@
 var assert = require("chai").assert;
 var lens = require("../lens.js");
+var Immutable = require('immutable');
 
 var recipe = {
     ingredients: [
@@ -14,19 +15,31 @@ var recipe = {
     ]
 };
 
+
+var immutableRecipe = Immutable.fromJS(recipe);
+
 describe("get", function() {
     it("should get elements of objects, arrays, and strings", function() {
 
         assert.equal(lens(recipe).get([]), recipe);
+        assert.equal(lens(immutableRecipe).get([]), immutableRecipe);
 
         assert.equal(
             lens(recipe).get(["ingredients"]),
             recipe["ingredients"]
         );
+        assert.equal(
+            lens(immutableRecipe).get(["ingredients"]),
+            immutableRecipe.get("ingredients")
+        );
 
         assert.equal(
             lens(recipe).get(["ingredients", 0]),
             recipe["ingredients"][0]
+        );
+        assert.equal(
+            lens(immutableRecipe).get(["ingredients", 0]),
+            immutableRecipe.get("ingredients").get(0)
         );
 
         // note that the first two test that .get returns the exact same
@@ -37,9 +50,17 @@ describe("get", function() {
             lens(recipe).get(["ingredients", 0, "name"]),
             "chocolate"
         );
+        assert.equal(
+            lens(immutableRecipe).get(["ingredients", 0, "name"]),
+            "chocolate"
+        );
 
         assert.equal(
             lens(recipe).get(["ingredients", 0, "name", 5]),
+            "l"
+        );
+        assert.equal(
+            lens(immutableRecipe).get(["ingredients", 0, "name", 5]),
             "l"
         );
     });
@@ -121,25 +142,6 @@ describe("merge", function() {
 });
 
 describe("mod", function() {
-    /*
-    it("should allow mutation", function() {
-        var result = lens(recipe).mod(["ingredients"], function(ingredients) {
-            ingredients[0].name = "CHOCOLATE";
-            return ingredients;
-        }).mod(["steps"], function() {
-            return "CONSUME";
-        }).freeze();
-
-        assert.deepEqual(result, {
-            ingredients: [{
-                name: "CHOCOLATE",
-                quantity: "1 cup"
-            }],
-            steps: "CONSUME"
-        });
-    });
-    */
-
     it("should not modify the original object", function() {
         lens(recipe).mod(["ingredients"], function(ingredients) {
             return ingredients.length;
@@ -156,6 +158,28 @@ describe("mod", function() {
         );
     });
 });
+
+/*
+describe("mutate", function() {
+    it("should allow mutation", function() {
+        var result = lens(immutableRecipe).mutate(["ingredients"], function(ingredients) {
+            ingredients[0].name = "CHOCOLATE";
+            return ingredients;
+        }).mod(["steps"], function() {
+            return "CONSUME";
+        }).freeze();
+
+        assert.deepEqual(result, {
+            ingredients: [{
+                name: "CHOCOLATE",
+                quantity: "1 cup"
+            }],
+            steps: "CONSUME"
+        });
+    });
+
+});
+*/
 
 describe("zoom", function() {
     it("should focus on part of the structure", function() {

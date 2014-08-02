@@ -1,3 +1,8 @@
+/* TODO batch *all* mutations
+ * idea: freeze / thaw implementations for all types
+ * lens constructor thaws, freeze delegates to type's freeze
+ */
+
 var Immutable = require('immutable');
 var util = require("./util.js");
     var clone = util.clone;
@@ -5,18 +10,19 @@ var util = require("./util.js");
     var merge = util.merge;
 
 var arr = require('./arr.js');
-var map = require('./map.js');
 var obj = require('./obj.js');
 var str = require('./str.js');
+
+var map = require('./map.js');
 var vect = require('./vect.js');
 
 // equivalents, without requiring it
 // find the implementation to use for a given object
 var dispatch = function(x) {
     if (x instanceof Immutable.Vector) {
-        return imVect;
+        return vect;
     } else if (x instanceof Immutable.Map) {
-        return imMap;
+        return map;
     } else if (Array.isArray(x)) {
         return arr;
     } else if (isObject(x)) {
@@ -37,6 +43,10 @@ var lens = function(obj) {
     }
 
     this._wrapped = obj;
+};
+
+lens.prototype.freeze = function() {
+    return this._wrapped;
 };
 
 lens.prototype.zoom = function(lensArr) {
@@ -127,8 +137,25 @@ lens.prototype.set = function(lensArr, set) {
     return this.mod(lensArr, function() { return set; });
 };
 
-lens.prototype.freeze = function() {
-    return this._wrapped;
+// TODO I keep using the same recursion pattern - abstract?
+lens.prototype.mutate = function(lensArr, f) {
+    var obj = this._wrapped;
+    var newObj = clone(obj);
+    var ops = dispatch(obj);
+
+    if (lensArr.length === 0) {
+        this._wrapped = this._wrapped.withMutations(f);
+    } else {
+        var monocle = lensArr[0];
+        var shortLens = lensArr.slice(1);
+
+        newObj[monocle] = lens(obj[monocle])
+            .mutate(shortLens, f)
+            .freeze();
+        this._wrapped = newObj;
+    }
+
+    return this;
 };
 
 module.exports = lens;
