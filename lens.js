@@ -1,39 +1,30 @@
-/*
- * javascript's native object/array weren't built for this kind of manipulation
- * - replace them with mori/something else?
- */
+var Immutable = require('immutable');
+var util = require("./util.js");
+    var clone = util.clone;
+    var isObject = util.isObject;
+    var merge = util.merge;
 
-// prelude: implement a few helpers which do the same as their underscore
+var arr = require('./arr.js');
+var map = require('./map.js');
+var obj = require('./obj.js');
+var str = require('./str.js');
+var vect = require('./vect.js');
+
 // equivalents, without requiring it
-
-var isObject = function(obj) {
-    return obj === Object(obj);;
-}
-
-var merge = function() {
-    var obj = {};
-
-    for (var i = 0; i < arguments.length; i++) {
-        var source = arguments[i];
-        if (source) {
-            for (var prop in source) {
-                obj[prop] = source[prop];
-            }
-        }
-    }
-
-    return obj;
-};
-
-var clone = function(obj) {
-    if (!isObject(obj)) {
+// find the implementation to use for a given object
+var dispatch = function(x) {
+    if (x instanceof Immutable.Vector) {
+        return imVect;
+    } else if (x instanceof Immutable.Map) {
+        return imMap;
+    } else if (Array.isArray(x)) {
+        return arr;
+    } else if (isObject(x)) {
         return obj;
+    } else if (typeof x === "string") {
+        return str;
     }
-
-    return Array.isArray(obj) ? obj.slice() : merge(obj);
 };
-
-// end prelude
 
 // This is underscore with a different name
 var lens = function(obj) {
@@ -73,23 +64,31 @@ lens.prototype.deZoom = function() {
 
 lens.prototype.get = function(lensArr) {
     var obj = this._wrapped;
+
     for (var i = 0; i < lensArr.length; i++) {
-        obj = obj[lensArr[i]];
+        obj = dispatch(obj).get(obj, lensArr[i]);
     }
 
     return obj;
 };
 
-lens.prototype.mod = function(lensArr, mod) {
+lens.prototype.mod = function(lensArr, f) {
     var obj = this._wrapped;
+    var newObj = clone(obj);
+    var ops = dispatch(obj);
 
     if (lensArr.length === 0) {
-        this._wrapped = mod(obj);
+        this._wrapped = f(this._wrapped);
+    } else if (lensArr.length === 1) {
+        this._wrapped = ops.mod(newObj, lensArr[0], f);
     } else {
         var monocle = lensArr[0];
-        var newObj = clone(obj);
+        var shortLens = lensArr.slice(1);
+
+        // newObj = ops.mod(obj[monocle], shortLens, f);
+
         newObj[monocle] = lens(obj[monocle])
-            .mod(lensArr.slice(1), mod)
+            .mod(shortLens, f)
             .freeze();
         this._wrapped = newObj;
     }
@@ -97,6 +96,7 @@ lens.prototype.mod = function(lensArr, mod) {
     return this;
 };
 
+// TODO - move to individual files
 lens.prototype.merge = function(lensArr, props) {
     this._wrapped = lens(this._wrapped).mod(lensArr, function(oldProps) {
         return merge(oldProps, props);
@@ -107,17 +107,19 @@ lens.prototype.merge = function(lensArr, props) {
 
 // Lens must have length >= 1 or there would be nothing to return
 lens.prototype.del = function(lensArr) {
-    var newObj = clone(this._wrapped);
+    var obj = this._wrapped;
+    var ops = dispatch(obj);
+
     if (lensArr.length === 1) {
-        delete newObj[lensArr[0]];
+        this._wrapped = ops.del(obj, lensArr[0]);
     } else {
-        var newSubObj = lens(newObj[lensArr[0]])
-            .del(lensArr.slice(1))
-            .freeze();
-        newObj[lensArr[0]] = newSubObj;
+        var monocle = lensArr[0];
+        var shortLens = lensArr.slice(1);
+        var subObj = ops.get(obj, monocle);
+
+        this._wrapped = ops.set(obj, monocle, ops.del(subObj, shortLens));
     }
 
-    this._wrapped = newObj;
     return this;
 };
 
@@ -125,52 +127,8 @@ lens.prototype.set = function(lensArr, set) {
     return this.mod(lensArr, function() { return set; });
 };
 
-/*
-// Lens must point to a member of an array. We'll insert into that array.
-lens.prototype.insertAt = function(lensArr, toInsert) {
-    var obj = this._wrapped;
-
-    var arrLens = lensArr.slice(0, -1);
-    var arr = lens(obj).get(arrLens).slice(); // slice to copy
-
-    var arrIdx = lensArr[lensArr.length-1];
-    arr.splice(arrIdx, 0, toInsert);
-    return lens(obj).set(arrLens, arr);
-};
-
-lens.prototype.insertBefore = lens.prototype.insertAt;
-lens.prototype.insertAfter = function(lensArr, toInsert) {
-    var newLens = lensArr.slice();
-    newLens[newLens.length-1] += 1;
-    return lens(this._wrapped).insertAt(newLens, toInsert);
-};
-*/
-
 lens.prototype.freeze = function() {
     return this._wrapped;
 };
 
 module.exports = lens;
-
-// examples
-//
-// > lens({ x: 1, y: 2 }).del(['x'])
-// { y: 2 }
-//
-// > lens({ x: 1, y: 2 }).set(['y'], 3)
-// { x: 1, y: 3 }
-//
-// > lens({ x: 1, y: 2 }).mod(['y'], function(y) { return y + 1; })
-// { x: 1, y: 3 }
-//
-// > lens({ x: 1, y: 2 }).get(['x'])
-// 1
-//
-// > lens([0, 1, 2]).insertAt([3], 3)
-// [0, 1, 2, 3]
-//
-// > lens([0, 1, 2]).insertBefore([0], -1)
-// [-1, 0, 1, 2]
-//
-// > lens([0, 1, 2]).insertAfter([2], 3)
-// [0, 1, 2, 3]

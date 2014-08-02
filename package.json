@@ -11,7 +11,11 @@
   },
   "dependencies": {
       "chai": "*",
-      "mocha": "*"
+      "mocha": "*",
+      "immutable": "*"
+  },
+  "devDependencies": {
+      "jstransform": "~6.1.0"
   },
   "author": "joelburget@gmail.com",
   "license": "MIT"
