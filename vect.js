@@ -14,4 +14,19 @@ var del = function(vect, monocle) {
     return vect.splice(monocle, 1);
 };
 
-module.exports = { get: get, set: set, mod: mod, del: del };
+var freeze = function(vect) {
+    return vect.asMutable();
+};
+
+var thaw = function(vect) {
+    return vect.asImmutable();
+};
+
+module.exports = {
+    get: get,
+    set: set,
+    mod: mod,
+    del: del,
+    freeze: freeze,
+    thaw: thaw
+};

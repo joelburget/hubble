@@ -159,28 +159,6 @@ describe("mod", function() {
     });
 });
 
-/*
-describe("mutate", function() {
-    it("should allow mutation", function() {
-        var result = lens(immutableRecipe).mutate(["ingredients"], function(ingredients) {
-            ingredients[0].name = "CHOCOLATE";
-            return ingredients;
-        }).mod(["steps"], function() {
-            return "CONSUME";
-        }).freeze();
-
-        assert.deepEqual(result, {
-            ingredients: [{
-                name: "CHOCOLATE",
-                quantity: "1 cup"
-            }],
-            steps: "CONSUME"
-        });
-    });
-
-});
-*/
-
 describe("zoom", function() {
     it("should focus on part of the structure", function() {
         var result = lens(recipe)

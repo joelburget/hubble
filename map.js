@@ -14,4 +14,19 @@ var del = function(map, monocle) {
     return map.delete(monocle);
 };
 
-module.exports = { get: get, set: set, mod: mod, del: del };
+var freeze = function(map) {
+    return map.asMutable();
+};
+
+var thaw = function(map) {
+    return map.asImmutable();
+};
+
+module.exports = {
+    get: get,
+    set: set,
+    mod: mod,
+    del: del,
+    freeze: freeze,
+    thaw: thaw
+};

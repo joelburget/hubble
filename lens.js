@@ -42,11 +42,15 @@ var lens = function(obj) {
         return new lens(obj);
     }
 
-    this._wrapped = obj;
+    var ops = dispatch(obj);
+    this._wrapped = ops.thaw ? ops.thaw(obj) : obj;
 };
 
 lens.prototype.freeze = function() {
-    return this._wrapped;
+    var obj = this._wrapped;
+    var ops = dispatch(obj);
+
+    return ops.freeze ? ops.freeze(obj) : obj;
 };
 
 lens.prototype.zoom = function(lensArr) {
@@ -135,27 +139,6 @@ lens.prototype.del = function(lensArr) {
 
 lens.prototype.set = function(lensArr, set) {
     return this.mod(lensArr, function() { return set; });
-};
-
-// TODO I keep using the same recursion pattern - abstract?
-lens.prototype.mutate = function(lensArr, f) {
-    var obj = this._wrapped;
-    var newObj = clone(obj);
-    var ops = dispatch(obj);
-
-    if (lensArr.length === 0) {
-        this._wrapped = this._wrapped.withMutations(f);
-    } else {
-        var monocle = lensArr[0];
-        var shortLens = lensArr.slice(1);
-
-        newObj[monocle] = lens(obj[monocle])
-            .mutate(shortLens, f)
-            .freeze();
-        this._wrapped = newObj;
-    }
-
-    return this;
 };
 
 module.exports = lens;
