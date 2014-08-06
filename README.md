@@ -2,12 +2,14 @@
 
 a javascript lens library
 
+![](hubble.png)
+
 ## What Does That Mean?
 
 This library makes it easy to inspect and manipulate data structures. In particular lenses excel at efficient immutable update.
 
 That's a mouthful, but I think it's easiest to understand through examples.
- 
+
 ```
 // data structure to manipulate
 var recipe = {
