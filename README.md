@@ -31,7 +31,9 @@ lens(recipe).get(["ingredients", 0, "name"])
 
 // we can also get a modified version of the data structure
 // this doesn't modify the original
-lens(recipe).set(["steps", 0], "unwrap chocolate, without eating all of it")
+var newRecipe = lens(recipe)
+    .set(["steps", 0], "unwrap chocolate, without eating all of it")
+    .freeze();
 // returns a structure that looks just like `recipe`, but with a different first step
 ```
 
