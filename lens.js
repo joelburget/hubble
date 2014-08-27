@@ -3,7 +3,6 @@
  * lens constructor thaws, freeze delegates to type's freeze
  */
 
-var Immutable = require('immutable');
 var util = require("./util.js");
     var clone = util.clone;
     var isObject = util.isObject;
@@ -13,17 +12,10 @@ var arr = require('./arr.js');
 var obj = require('./obj.js');
 var str = require('./str.js');
 
-var map = require('./map.js');
-var vect = require('./vect.js');
-
 // equivalents, without requiring it
 // find the implementation to use for a given object
 var dispatch = function(x) {
-    if (x instanceof Immutable.Vector) {
-        return vect;
-    } else if (x instanceof Immutable.Map) {
-        return map;
-    } else if (Array.isArray(x)) {
+    if (Array.isArray(x)) {
         return arr;
     } else if (isObject(x)) {
         return obj;

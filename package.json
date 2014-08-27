@@ -9,12 +9,9 @@
   "scripts": {
     "test": "mocha"
   },
-  "dependencies": {
+  "devDependencies": {
       "chai": "*",
       "mocha": "*",
-      "immutable": "*"
-  },
-  "devDependencies": {
       "jstransform": "~6.1.0"
   },
   "author": "joelburget@gmail.com",
