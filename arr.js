@@ -9,7 +9,7 @@ var set = function(arr, monocle, val) {
 };
 
 var mod = function(arr, monocle, f) {
-    var newArr = arr.splice();
+    var newArr = arr.slice();
     newArr[monocle] = f(arr[monocle]);
     return newArr;
 };

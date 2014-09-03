@@ -68,6 +68,17 @@ describe("set", function() {
             ]
         );
     });
+
+    it("should allow multiple sets on an array", function() {
+        var arr = [1,2,3];
+        var res = lens(arr)
+            .set([0], 0)
+            .set([1], 1)
+            .set([2], 2)
+            .freeze()
+
+        assert.deepEqual(res, [0, 1, 2]);
+    });
 });
 
 describe("del", function() {
