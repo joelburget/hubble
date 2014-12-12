@@ -16,7 +16,7 @@ var mod = function(arr, monocle, f) {
 
 var del = function(arr, monocle) {
     var newArr = arr.slice();
-    newArr.splice(monocle);
+    newArr.splice(monocle, 1);
     return newArr;
 };
 
