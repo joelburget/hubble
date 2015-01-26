@@ -121,9 +121,13 @@ lens.prototype.del = function(lensArr) {
     } else {
         var monocle = lensArr[0];
         var shortLens = lensArr.slice(1);
-        var subObj = ops.get(obj, monocle);
+        var newObj = clone(obj);
 
-        this._wrapped = ops.set(obj, monocle, ops.del(subObj, shortLens));
+        newObj[monocle] = lens(obj[monocle])
+            .del(shortLens)
+            .freeze();
+
+        this._wrapped = newObj;
     }
 
     return this;

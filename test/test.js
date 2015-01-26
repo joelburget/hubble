@@ -1,5 +1,5 @@
 var assert = require("chai").assert;
-var lens = require("../lens.js");
+var lens = require("../index.js");
 
 var recipe = {
     ingredients: [
@@ -97,9 +97,20 @@ describe("del", function() {
             .get(["steps"]);
 
         expected = ["unwrap chocolate", "eat chocolate"];
-        delete expected[0];
+        expected.splice(0, 1);
 
         assert.deepEqual(result, expected);
+
+        var result = lens({
+            itemData: "",
+            authorNames: ["joel", "alice"],
+        }).del(["authorNames", 1])
+            .freeze();
+
+        assert.deepEqual(result, {
+            itemData: "",
+            authorNames: ["joel"],
+        });
     });
 });
 
